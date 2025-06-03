@@ -1,17 +1,13 @@
-CC = gcc
-FLEX = flex
-BISON = bison
+all: compiler
 
-all: graphicslang
+compiler: parser.tab.c lex.yy.c
+	gcc -o compiler parser.tab.c lex.yy.c -ll
 
-graphicslang: graphicslang.tab.c lex.yy.c main.c
-	$(CC) -o graphicslang graphicslang.tab.c lex.yy.c main.c -lfl
+parser.tab.c: parser.y
+	bison -d parser.y
 
-graphicslang.tab.c graphicslang.tab.h: graphicslang.y
-	$(BISON) -d graphicslang.y
-
-lex.yy.c: graphicslang.l graphicslang.tab.h
-	$(FLEX) graphicslang.l
+lex.yy.c: lexer.l parser.tab.h
+	flex lexer.l
 
 clean:
-	rm -f graphicslang graphicslang.tab.* lex.yy.c *.o
+	rm -f compiler parser.tab.c parser.tab.h lex.yy.c

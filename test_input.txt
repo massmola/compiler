@@ -1,5 +1,0 @@
-int x = 5
-color c = 0
-point(1, 2)
-line(1, 2, 3, 4)
-point(1, c)

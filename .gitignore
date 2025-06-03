@@ -4,3 +4,6 @@ lex.yy.c
 graphicslang
 graphicslang.tab.c
 graphicslang.tab.h
+parser.tab.c
+parser.tab.h
+compiler
