@@ -1,1 +1,6 @@
 material/
+
+lex.yy.c
+graphicslang
+graphicslang.tab.c
+graphicslang.tab.h
