@@ -93,4 +93,3 @@ expr:
 
 %%
 void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
-int main(void) { return yyparse(); }

@@ -21,6 +21,3 @@
 [ \t\r\n]+  { /* skip whitespace */ }
 .          { printf("Unknown character: %s\n", yytext); }
 %%
-
-
-"
