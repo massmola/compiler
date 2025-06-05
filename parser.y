@@ -28,31 +28,65 @@ int add_var(const char *name, int value) {
 
 %union {
     int ival;
+    double dval;
     char *sval;
 }
 
 %token INT
 %token <sval> ID
-%token <ival> NUM
-%token CANVAS
+%token <dval> NUM
+%token RECT
+%token FILL
+%token <sval> COLOR
+
+%type <sval> fill_opt // <--- ADD THIS LINE
 
 %%
-start: stmts;
+start: svg_file;
+
+svg_file: svg_open stmts svg_close;
+
+svg_open: { printf("<svg xmlns=\"http://www.w3.org/2000/svg\">\n"); };
+svg_close: { printf("</svg>\n"); };
 
 stmts: /* empty */
      | stmts stmt
      ;
 
 stmt: decl '\n'
-    | canvas_cmd '\n'
+    | rect_cmd '\n'
     ;
 
-canvas_cmd: CANVAS NUM NUM { printf("<svg width=\"%d\" height=\"%d\" xmlns=\"http://www.w3.org/2000/svg\"></svg>\n", $2, $3); }
+rect_cmd: RECT NUM NUM NUM NUM fill_opt {
+    if ($6) {
+        printf("<rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\" fill=\"%s\"/>\n", $2, $3, $4, $5, $6);
+        free($6); // Free the allocated string for fill color
+    } else {
+        printf("<rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\"/>\n", $2, $3, $4, $5);
+    }
+}
     ;
 
-decl: INT ID '=' NUM { if (add_var($2, $4) == 0) printf("Declared int %s = %d\n", $2, $4); else printf("Variable table full!\n"); free($2); }
+decl: INT ID '=' NUM {
+    if ((double)(int)$4 == $4) { // Check if NUM is an integer
+        if (add_var($2, (int)$4) == 0) {
+            printf("Declared int %s = %d\n", $2, (int)$4);
+        } else {
+            printf("Variable table full!\n");
+        }
+    } else {
+        printf("Error: NUM must be an integer for variable declarations.\n");
+    }
+    free($2);
+}
     ;
+
+fill_opt: /* empty */ { $$ = NULL; }
+        | FILL '=' ID { $$ = $3; }
+        | FILL '=' COLOR { $$ = $3; }
+        ;
 %%
+
 
 int main(void) {
     return yyparse();

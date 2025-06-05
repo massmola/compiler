@@ -5,11 +5,13 @@
 
 %%
 "int"     { return INT; }
-"CANVAS"   { return CANVAS; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.sval = strdup(yytext); return ID; }
-[0-9]+    { yylval.ival = atoi(yytext); return NUM; }
+"RECT"    { return RECT; }
+"fill"    { return FILL; }
 "="       { return '='; }
+"#"[a-fA-F0-9]{6} { yylval.sval = strdup(yytext); return COLOR; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.sval = strdup(yytext); return ID; }
+[0-9]+(\.[0-9]+)? { yylval.dval = atof(yytext); return NUM; }
 \n        { return '\n'; }
 [ \t]+    { /* skip whitespace */ }
-.         { return 0; }
+.         { /* skip unknown characters */ }
 %%

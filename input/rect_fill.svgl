@@ -1,0 +1,3 @@
+RECT 4 3 1 1 fill=red
+RECT 4 4 2 1
+RECT 5 5 2 1 fill=#00ff00
