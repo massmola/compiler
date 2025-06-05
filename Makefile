@@ -9,8 +9,10 @@ parser.tab.c: parser.y
 lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
 
+.PHONY: clean test
+
 clean:
-	rm -f compiler parser.tab.c parser.tab.h lex.yy.c
+	rm -rf compiler parser.tab.c parser.tab.h lex.yy.c output/*.svg output/*.txt
 
 output/%.svg: input/%.svgl compiler
 	@mkdir -p output
