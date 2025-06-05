@@ -1,7 +1,7 @@
 all: compiler
 
 compiler: parser.tab.c lex.yy.c
-	gcc -o compiler parser.tab.c lex.yy.c -ll
+	gcc -o compiler parser.tab.c lex.yy.c -lfl
 
 parser.tab.c: parser.y
 	bison -d parser.y

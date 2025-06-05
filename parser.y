@@ -31,7 +31,6 @@ int add_var(const char *name, int value) {
     char *sval;
 }
 
-%token HELLO
 %token INT
 %token <sval> ID
 %token <ival> NUM
@@ -43,8 +42,7 @@ stmts: /* empty */
      | stmts stmt
      ;
 
-stmt: HELLO '\n' { printf("Hello detected!\n"); }
-    | decl '\n'
+stmt: decl '\n'
     ;
 
 decl: INT ID '=' NUM { if (add_var($2, $4) == 0) printf("Declared int %s = %d\n", $2, $4); else printf("Variable table full!\n"); free($2); }
