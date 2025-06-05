@@ -11,3 +11,12 @@ lex.yy.c: lexer.l parser.tab.h
 
 clean:
 	rm -f compiler parser.tab.c parser.tab.h lex.yy.c
+
+output/%.svg: input/%.svgl compiler
+	@mkdir -p output
+	./compiler < $< > $@
+	cp $@ $@.txt
+
+test: clean all
+	@mkdir -p output
+	$(MAKE) $(patsubst input/%.svgl,output/%.svg,$(wildcard input/*.svgl))
