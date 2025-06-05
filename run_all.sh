@@ -5,6 +5,6 @@ mkdir -p ./output
 
 for infile in ./input/*.svgl; do
     base=$(basename "$infile" .svgl)
-    outfile="./output/${base}.svg"
+    outfile="./output/${base}."
     ./compiler < "$infile" > "$outfile"
 done

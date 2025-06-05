@@ -1,4 +1,6 @@
 material/
+output/*
+!output/.gitkeep
 
 lex.yy.c
 graphicslang
@@ -7,3 +9,4 @@ graphicslang.tab.h
 parser.tab.c
 parser.tab.h
 compiler
+

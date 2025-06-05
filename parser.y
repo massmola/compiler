@@ -34,6 +34,7 @@ int add_var(const char *name, int value) {
 %token INT
 %token <sval> ID
 %token <ival> NUM
+%token CANVAS
 
 %%
 start: stmts;
@@ -43,6 +44,10 @@ stmts: /* empty */
      ;
 
 stmt: decl '\n'
+    | canvas_cmd '\n'
+    ;
+
+canvas_cmd: CANVAS NUM NUM { printf("<svg width=\"%d\" height=\"%d\" xmlns=\"http://www.w3.org/2000/svg\"></svg>\n", $2, $3); }
     ;
 
 decl: INT ID '=' NUM { if (add_var($2, $4) == 0) printf("Declared int %s = %d\n", $2, $4); else printf("Variable table full!\n"); free($2); }
