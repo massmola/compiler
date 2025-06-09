@@ -1,6 +1,6 @@
 %{
-#include "ast.h"          // <-- DEFINE the AST types FIRST.
-#include "parser.tab.h"   // <-- THEN include the file that USES them.
+#include "ast.h"          // Define AST types first
+#include "parser.tab.h"   // Then include the parser header that uses them
 #include <stdlib.h>
 #include <string.h>
 %}

@@ -7,7 +7,7 @@ typedef enum {
     NODE_TYPE_RECT,
     NODE_TYPE_LINE,
     NODE_TYPE_DECL,
-    NODE_TYPE_ASSIGNMENT,
+    NODE_TYPE_ASSIGNMENT, // Separate type for clarity
     NODE_TYPE_WHILE,
     NODE_TYPE_CONDITION,
     NODE_TYPE_EXPR_NUM,
@@ -23,7 +23,7 @@ typedef enum {
 // Forward-declare the main struct so pointers can be used inside
 struct ASTNode;
 
-// The basic building block for an expression (a number, variable, or color)
+// The basic building block for an expression
 typedef struct {
     NodeType type;
     union {
@@ -32,7 +32,7 @@ typedef struct {
     } val;
 } ExprNode;
 
-// Node for a list of statements (linked list)
+// Node for a list of statements
 typedef struct {
     NodeType type;
     struct ASTNode *stmt;
@@ -72,7 +72,7 @@ typedef struct {
 typedef struct {
     NodeType type;
     struct ASTNode *condition;
-    struct ASTNode *body; // A list of statements
+    struct ASTNode *body;
 } WhileNode;
 
 // The generic AST node that holds all other node types
@@ -82,7 +82,7 @@ typedef struct ASTNode {
         StmtListNode stmts;
         RectNode rect;
         LineNode line;
-        DeclNode decl;
+        DeclNode decl; // Used for both decl and assignment
         WhileNode while_loop;
         ConditionNode condition;
         ExprNode expr;
@@ -90,12 +90,13 @@ typedef struct ASTNode {
 } ASTNode;
 
 /* --- Function Prototypes for AST Helper/Evaluator Functions --- */
-// These will be defined in parser.y, but declared here for everyone to see.
+// These are defined in parser.y, but declared here for all files to see.
 
 ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next);
 ASTNode* new_rect_cmd(ExprNode *x, ExprNode *y, ExprNode *w, ExprNode *h, ExprNode *fill);
 ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, ExprNode *stroke);
 ASTNode* new_decl(char* name, ExprNode* val);
+ASTNode* new_assignment(char* name, ExprNode* val); // <<< The added declaration
 ASTNode* new_while(ASTNode* cond, ASTNode* body);
 ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right);
 ExprNode* new_expr_num(double d);
@@ -104,6 +105,6 @@ ExprNode* new_expr_color(char* s);
 
 void eval_ast(struct ASTNode *node);
 void free_ast(struct ASTNode *node);
-
+void free_expr(ExprNode *e);
 
 #endif // AST_H
