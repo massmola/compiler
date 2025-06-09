@@ -7,7 +7,7 @@
 
 struct var {
     char name[32];
-    int value;
+    double value;
 };
 
 struct var vars[MAX_VARS];
@@ -16,7 +16,7 @@ int var_count = 0;
 int yylex(void);
 int yyerror(const char *s);
 
-int add_var(const char *name, int value) {
+int add_var(const char *name, double value) {
     if (var_count >= MAX_VARS) return -1;
     strncpy(vars[var_count].name, name, 31);
     vars[var_count].name[31] = '\0';
@@ -38,15 +38,19 @@ int add_var(const char *name, int value) {
 %token RECT
 %token FILL
 %token <sval> COLOR
+%token NUMDECL
+%token LINE
 
-%type <sval> fill_opt // <--- ADD THIS LINE
+%type <sval> fill_opt line_opt
+%type <dval> rect_arg
+%type <dval> line_arg
 
 %%
 start: svg_file;
 
 svg_file: svg_open stmts svg_close;
 
-svg_open: { printf("<svg xmlns=\"http://www.w3.org/2000/svg\">\n"); };
+svg_open: { printf("<svg width=\"21cm\" height=\"29.7cm\" xmlns=\"http://www.w3.org/2000/svg\">\n"); };
 svg_close: { printf("</svg>\n"); };
 
 stmts: /* empty */
@@ -55,35 +59,60 @@ stmts: /* empty */
 
 stmt: decl '\n'
     | rect_cmd '\n'
+    | line_cmd '\n'
     ;
 
-rect_cmd: RECT NUM NUM NUM NUM fill_opt {
+rect_cmd: RECT rect_arg rect_arg rect_arg rect_arg fill_opt {
     if ($6) {
         printf("<rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\" fill=\"%s\"/>\n", $2, $3, $4, $5, $6);
-        free($6); // Free the allocated string for fill color
+        free($6);
     } else {
         printf("<rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\"/>\n", $2, $3, $4, $5);
     }
 }
     ;
 
-decl: INT ID '=' NUM {
-    if ((double)(int)$4 == $4) { // Check if NUM is an integer
-        if (add_var($2, (int)$4) == 0) {
-            printf("Declared int %s = %d\n", $2, (int)$4);
-        } else {
-            printf("Variable table full!\n");
-        }
-    } else {
-        printf("Error: NUM must be an integer for variable declarations.\n");
-    }
-    free($2);
-}
+decl: NUMDECL ID '=' NUM { add_var($2, $4); free($2); }
     ;
 
 fill_opt: /* empty */ { $$ = NULL; }
         | FILL '=' ID { $$ = $3; }
         | FILL '=' COLOR { $$ = $3; }
+        ;
+
+line_cmd: LINE line_arg line_arg line_arg line_arg line_opt {
+    double x1 = $2, y1 = $3, x2 = $4, y2 = $5;
+    char *stroke = $6 ? $6 : "black";
+    printf("<line x1=\"%gcm\" y1=\"%gcm\" x2=\"%gcm\" y2=\"%gcm\" stroke=\"%s\" stroke-width=\"10\" stroke-linecap=\"round\"/>\n", x1, y1, x2, y2, stroke);
+    if ($6) free($6);
+}
+    ;
+
+line_opt: /* empty */ { $$ = NULL; }
+        | FILL '=' ID { $$ = $3; }
+        | FILL '=' COLOR { $$ = $3; }
+        ;
+
+rect_arg: NUM { $$ = $1; }
+        | ID  { /* lookup variable value */
+            int found = 0;
+            for (int i = 0; i < var_count; ++i) {
+                if (strcmp(vars[i].name, $1) == 0) {
+                    $$ = vars[i].value;
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                fprintf(stderr, "Error: undefined variable '%s'\n", $1);
+                $$ = 0;
+            }
+            free($1);
+        }
+        ;
+
+line_arg: NUM { $$ = $1; }
+        | ID  { int found = 0; for (int i = 0; i < var_count; ++i) { if (strcmp(vars[i].name, $1) == 0) { $$ = vars[i].value; found = 1; break; } } if (!found) { fprintf(stderr, "Error: undefined variable '%s'\n", $1); $$ = 0; } free($1); }
         ;
 %%
 

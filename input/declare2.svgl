@@ -1,2 +1,2 @@
-int x = 5
-int y = 10
+num x = 5
+num y = 10.5

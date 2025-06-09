@@ -1,0 +1,5 @@
+num x = 4
+num y = 3.5
+num w = 2
+num h = 1.5
+RECT x y w h fill=red

@@ -1,0 +1,6 @@
+num x1 = 1
+num y1 = 7
+num x2 = 10
+num y2 = 5
+LINE x1 y1 x2 y2
+LINE 1 7 10 1 fill=red
