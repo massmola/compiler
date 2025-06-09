@@ -26,5 +26,5 @@ output/%.svg: input/%.svgl compiler
 
 test: clean all
 	@mkdir -p output
-	$(MAKE) $(patsubst input/%.svgl,output/%.svg,$(wildcard input/*.svgl))
+	@$(MAKE) $(patsubst input/%.svgl,output/%.svg,$(wildcard input/*.svgl))
 	@echo "Tests completed. Check output/*.svg and output/*.txt for results."

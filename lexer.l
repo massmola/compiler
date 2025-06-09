@@ -8,14 +8,29 @@
 "int"     { return INT; }
 "RECT"    { return RECT; }
 "fill"    { return FILL; }
-"="       { return '='; }
 "num"     { return NUMDECL; }
 "LINE"    { return LINE; }
-"CANVAS"  { return CANVAS; } /* <-- NEW RULE */
+"CANVAS"  { return CANVAS; }
+"while"   { return WHILE; } /* <-- NEW */
+
+/* --- NEW RELATIONAL OPERATORS --- */
+"<"       { return LT; }
+">"       { return GT; }
+"=="      { return EQ; }
+"!="      { return NE; }
+"<="      { return LE; }
+">="      { return GE; }
+/* --- END NEW --- */
+
+
+"="       { return '='; }
+"{"       { return '{'; }   /* <-- NEW */
+"}"       { return '}'; }   /* <-- NEW */
+
 "#"[a-fA-F0-9]{6} { yylval.sval = strdup(yytext); return COLOR; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.sval = strdup(yytext); return ID; }
 [0-9]+(\.[0-9]+)? { yylval.dval = atof(yytext); return NUM; }
-\n        { return '\n'; }
+\n        { /* Newlines are now just whitespace */ } /* <-- MODIFIED */
 [ \t]+    { /* skip whitespace */ }
 .         { /* skip unknown characters */ }
 %%
