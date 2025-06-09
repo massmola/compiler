@@ -1,0 +1,21 @@
+CANVAS 20 10
+
+num i = 1
+num limit = 5
+num two = 2
+num three = 3
+num four = 4
+num five = 5
+num six = 6
+num seven = 7
+num eight = 8
+num nine = 9
+
+while (i < nine) {
+  RECT i 1 0.5 8 fill=blue
+
+  // This is a very clumsy way to increment 'i' but it works with the current grammar
+  // We need to add if-statements to make this cleaner!
+  i = nine  // Now 'i' is 2 for the next loop.
+  // The loop will run forever! We need to update the value we assign.
+}

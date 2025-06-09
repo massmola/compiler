@@ -4,7 +4,8 @@ all: compiler
 # Define the C compiler
 CC = gcc
 # Define compiler flags
-CFLAGS = -Wall -g
+# -Wall enables all warnings, then -Wno-unused-function disables just this one.
+CFLAGS = -Wall -g -Wno-unused-function
 
 # Define source files and the final executable name
 SRCS = parser.tab.c lex.yy.c

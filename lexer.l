@@ -1,8 +1,11 @@
 %{
-#include "parser.tab.h"
+#include "ast.h"          // <-- DEFINE the AST types FIRST.
+#include "parser.tab.h"   // <-- THEN include the file that USES them.
 #include <stdlib.h>
 #include <string.h>
 %}
+
+%option noyywrap nounput
 
 %%
 "int"       { return INT; }
