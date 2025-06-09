@@ -5,6 +5,10 @@
 
 #define MAX_VARS 100
 
+// Global variables for canvas size, with default values (A4 paper)
+double canvas_width = 21.0;
+double canvas_height = 29.7;
+
 struct var {
     char name[32];
     double value;
@@ -40,27 +44,45 @@ int add_var(const char *name, double value) {
 %token <sval> COLOR
 %token NUMDECL
 %token LINE
+%token CANVAS
 
 %type <sval> fill_opt line_opt
 %type <dval> rect_arg
 %type <dval> line_arg
 
 %%
-start: svg_file;
 
-svg_file: svg_open stmts svg_close;
+start: optional_canvas_decl svg_body;
 
-svg_open: { printf("<svg width=\"21cm\" height=\"29.7cm\" xmlns=\"http://www.w3.org/2000/svg\">\n"); };
+optional_canvas_decl: /* empty */
+                    | canvas_cmd '\n'
+                    ;
+
+svg_body: svg_open stmts svg_close;
+
+
+svg_open: {
+    printf("<svg width=\"%gcm\" height=\"%gcm\" xmlns=\"http://www.w3.org/2000/svg\">\n", canvas_width, canvas_height);
+};
 svg_close: { printf("</svg>\n"); };
 
 stmts: /* empty */
      | stmts stmt
      ;
 
+/* --- THE FIX IS HERE --- */
 stmt: decl '\n'
     | rect_cmd '\n'
     | line_cmd '\n'
+    | '\n'  /* This new rule allows for empty lines between statements */
     ;
+/* --- END OF FIX --- */
+
+canvas_cmd: CANVAS rect_arg rect_arg {
+    canvas_width = $2;
+    canvas_height = $3;
+}
+;
 
 rect_cmd: RECT rect_arg rect_arg rect_arg rect_arg fill_opt {
     if ($6) {

@@ -16,7 +16,8 @@ clean:
 
 output/%.svg: input/%.svgl compiler
 	@mkdir -p output
-	./compiler < $< > $@ 2> $@.err
+	./compiler < $< > $@ 2> $@.err || { echo "Error: Compilation failed for $<. Check $@.err for details."; exit 1; }
+	@if [ ! -s $@.err ]; then rm -f $@.err; fi
 	@if [ $$? -ne 0 ]; then \
 		echo "Error: Compilation failed for $<. Check $@.err for details."; \
 		exit 1; \
