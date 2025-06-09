@@ -18,7 +18,7 @@
 "=="        { return EQ; }
 "!="        { return NE; }
 "<="        { return LE; }
-">="        { "return GE; }
+">="        { return GE; }
 
 "="         { return '='; }
 "{"         { return '{'; }
