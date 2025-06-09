@@ -6,5 +6,5 @@ num nine = 9
 
 while (i < nine) {
   RECT i 1 0.5 8 fill=blue
-  i = nine
+  i = i + 1
 }

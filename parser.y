@@ -14,6 +14,10 @@ double canvas_height = 29.7;
 
 int yylex(void);
 int yyerror(const char *s);
+
+// Function prototypes for functions defined below
+double eval_expr_numeric(ExprNode *expr);
+void free_expr(ExprNode *e);
 %}
 
 %union {
@@ -27,8 +31,11 @@ int yyerror(const char *s);
 %token INT RECT FILL NUMDECL LINE CANVAS WHILE
 %token LT GT EQ NE LE GE
 
+%left '+' '-'
+%left '*' '/'
+
 %type <node> program stmts stmt rect_cmd line_cmd decl while_loop condition assignment
-%type <expr> arg color_arg fill_opt line_opt
+%type <expr> expr color_arg fill_opt line_opt
 %type <op> cmp_op
 
 %%
@@ -41,10 +48,9 @@ program: optional_canvas_decl stmts {
     ;
 
 optional_canvas_decl: /* empty */
-    | CANVAS arg arg {
-        if ($2->type == NODE_TYPE_EXPR_NUM && $3->type == NODE_TYPE_EXPR_NUM) {
-           canvas_width = $2->val.dval; canvas_height = $3->val.dval;
-        }
+    | CANVAS expr expr {
+        canvas_width = eval_expr_numeric($2);
+        canvas_height = eval_expr_numeric($3);
         free_expr($2); free_expr($3);
     }
     ;
@@ -52,13 +58,22 @@ optional_canvas_decl: /* empty */
 stmts: /* empty */  { $$ = NULL; } | stmts stmt { $$ = new_stmt_list($2, $1); } ;
 stmt: decl | assignment | rect_cmd | line_cmd | while_loop ;
 while_loop: WHILE '(' condition ')' '{' stmts '}' { $$ = new_while($3, $6); } ;
-condition: arg cmp_op arg { $$ = new_condition($2, $1, $3); } ;
+condition: expr cmp_op expr { $$ = new_condition($2, $1, $3); } ;
 cmp_op: LT { $$ = OP_LT; } | GT { $$ = OP_GT; } | EQ { $$ = OP_EQ; } | NE { $$ = OP_NE; } | LE { $$ = OP_LE; } | GE { $$ = OP_GE; } ;
-decl: NUMDECL ID '=' arg { $$ = new_decl($2, $4); } ;
-assignment: ID '=' arg { $$ = new_assignment($1, $3); } ;
-rect_cmd: RECT arg arg arg arg fill_opt { $$ = new_rect_cmd($2, $3, $4, $5, $6); } ;
-line_cmd: LINE arg arg arg arg line_opt { $$ = new_line_cmd($2, $3, $4, $5, $6); } ;
-arg: NUM { $$ = new_expr_num($1); } | ID  { $$ = new_expr_id($1); } ;
+decl: NUMDECL ID '=' expr { $$ = new_decl($2, $4); } ;
+assignment: ID '=' expr { $$ = new_assignment($1, $3); } ;
+rect_cmd: RECT expr expr expr expr fill_opt { $$ = new_rect_cmd($2, $3, $4, $5, $6); } ;
+line_cmd: LINE expr expr expr expr line_opt { $$ = new_line_cmd($2, $3, $4, $5, $6); } ;
+
+expr: NUM                 { $$ = new_expr_num($1); }
+    | ID                  { $$ = new_expr_id($1); }
+    | expr '+' expr       { $$ = new_expr_op('+', $1, $3); }
+    | expr '-' expr       { $$ = new_expr_op('-', $1, $3); }
+    | expr '*' expr       { $$ = new_expr_op('*', $1, $3); }
+    | expr '/' expr       { $$ = new_expr_op('/', $1, $3); }
+    | '(' expr ')'        { $$ = $2; }
+    ;
+
 fill_opt: /* empty */ { $$ = NULL; } | FILL '=' color_arg { $$ = $3; } ;
 line_opt: /* empty */ { $$ = NULL; } | FILL '=' color_arg { $$ = $3; } ;
 color_arg: ID { $$ = new_expr_id($1); } | COLOR { $$ = new_expr_color($1); } ;
@@ -79,11 +94,36 @@ ASTNode* new_decl(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(si
 ASTNode* new_assignment(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_ASSIGNMENT; n->node.decl.name = name; n->node.decl.value = val; return n; }
 ASTNode* new_while(ASTNode* cond, ASTNode* body) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_WHILE; n->node.while_loop.condition = cond; n->node.while_loop.body = body; return n; }
 ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_CONDITION; n->node.condition.op = op; n->node.condition.left = left; n->node.condition.right = right; return n; }
-ExprNode* new_expr_num(double d) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_NUM; e->val.dval = d; return e; }
-ExprNode* new_expr_id(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_ID; e->val.sval = s; return e; }
-ExprNode* new_expr_color(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_COLOR; e->val.sval = s; return e; }
-double eval_expr_numeric(ExprNode *expr) { if (!expr) return 0.0; if (expr->type == NODE_TYPE_EXPR_NUM) return expr->val.dval; if (expr->type == NODE_TYPE_EXPR_ID) return get_var_value(expr->val.sval); return 0.0; }
-const char* eval_expr_string(ExprNode *expr) { if (!expr) return "black"; if (expr->type == NODE_TYPE_EXPR_COLOR) return expr->val.sval; if (expr->type == NODE_TYPE_EXPR_ID) return expr->val.sval; return "black"; }
+ExprNode* new_expr_num(double d) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_NUM; e->data.dval = d; return e; }
+ExprNode* new_expr_id(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_ID; e->data.sval = s; return e; }
+ExprNode* new_expr_color(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_COLOR; e->data.sval = s; return e; }
+ExprNode* new_expr_op(int op, ExprNode* left, ExprNode* right) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_OP; e->data.op.op = op; e->data.op.left = left; e->data.op.right = right; return e; }
+
+double eval_expr_numeric(ExprNode *expr) {
+    if (!expr) return 0.0;
+    switch (expr->type) {
+        case NODE_TYPE_EXPR_NUM: return expr->data.dval;
+        case NODE_TYPE_EXPR_ID: return get_var_value(expr->data.sval);
+        case NODE_TYPE_EXPR_OP: {
+            double left = eval_expr_numeric(expr->data.op.left);
+            double right = eval_expr_numeric(expr->data.op.right);
+            switch (expr->data.op.op) {
+                case '+': return left + right;
+                case '-': return left - right;
+                case '*': return left * right;
+                case '/':
+                    if (right == 0) {
+                        fprintf(stderr, "Runtime Error: Division by zero.\n");
+                        return 0.0;
+                    }
+                    return left / right;
+                default: fprintf(stderr, "Runtime Error: Unknown operator '%c'\n", expr->data.op.op); return 0.0;
+            }
+        }
+        default: fprintf(stderr, "Runtime Error: Invalid expression type for numeric evaluation.\n"); return 0.0;
+    }
+}
+const char* eval_expr_string(ExprNode *expr) { if (!expr) return "black"; if (expr->type == NODE_TYPE_EXPR_COLOR) return expr->data.sval; if (expr->type == NODE_TYPE_EXPR_ID) return expr->data.sval; return "black"; }
 int eval_condition(ConditionNode *cond) { double left = eval_expr_numeric(cond->left); double right = eval_expr_numeric(cond->right); switch(cond->op) { case OP_LT: return left < right; case OP_GT: return left > right; case OP_EQ: return left == right; case OP_NE: return left != right; case OP_LE: return left <= right; case OP_GE: return left >= right; default: return 0; } }
 
 void eval_ast(ASTNode *n) {
@@ -103,7 +143,24 @@ void eval_ast(ASTNode *n) {
     }
 }
 
-void free_expr(ExprNode *e) { if (!e) return; if (e->type == NODE_TYPE_EXPR_ID || e->type == NODE_TYPE_EXPR_COLOR) free(e->val.sval); free(e); }
+void free_expr(ExprNode *e) {
+    if (!e) return;
+    switch(e->type) {
+        case NODE_TYPE_EXPR_ID:
+        case NODE_TYPE_EXPR_COLOR:
+            free(e->data.sval);
+            break;
+        case NODE_TYPE_EXPR_OP:
+            free_expr(e->data.op.left);
+            free_expr(e->data.op.right);
+            break;
+        case NODE_TYPE_EXPR_NUM:
+            /* No dynamic memory to free for a number */
+            break;
+        default: break; /* Other expression types might not have memory to free */
+    }
+    free(e);
+}
 
 void free_ast(ASTNode *n) {
     if (!n) return;
