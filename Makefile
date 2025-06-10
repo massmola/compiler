@@ -33,7 +33,13 @@ test: $(EXEC)
 	@echo "--- Running Tests ---"
 	@mkdir -p output
 	@$(MAKE) --no-print-directory $(patsubst input/%.svgl,output/%.svg,$(wildcard input/*.svgl))
-	@echo "--- Tests completed. Check output/ folder. ---"
+	@echo "--- Tests completed. Check output	@cp $@ $@.txt
+
+# The 'clean' target removes all generated files
+clean:
+	@echo "Cleaning up generated files..."
+	rm -f $(EXEC) parser.tab.c parser.tab.h lex.yy.c
+	rm -rf output/ folder. ---"
 
 # Rule for processing a single input file
 output/%.svg: input/%.svgl $(EXEC)
