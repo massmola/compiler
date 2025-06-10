@@ -9,6 +9,7 @@ typedef enum {
     NODE_TYPE_DECL,
     NODE_TYPE_ASSIGNMENT, // Separate type for clarity
     NODE_TYPE_WHILE,
+    NODE_TYPE_IF,
     NODE_TYPE_CONDITION,
     NODE_TYPE_EXPR_NUM,
     NODE_TYPE_EXPR_ID,
@@ -87,6 +88,14 @@ typedef struct {
     struct ASTNode *body;
 } WhileNode;
 
+// Node for an IF statement
+typedef struct {
+    NodeType type;
+    struct ASTNode *condition;
+    struct ASTNode *if_body;
+    struct ASTNode *else_body; // Can be NULL
+} IfNode;
+
 // The generic AST node that holds all other node types
 typedef struct ASTNode {
     NodeType type;
@@ -96,6 +105,7 @@ typedef struct ASTNode {
         LineNode line;
         DeclNode decl; // Used for both decl and assignment
         WhileNode while_loop;
+        IfNode if_stmt;
         ConditionNode condition;
         ExprNode expr;
     } node;
@@ -110,6 +120,7 @@ ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, Ex
 ASTNode* new_decl(char* name, ExprNode* val);
 ASTNode* new_assignment(char* name, ExprNode* val);
 ASTNode* new_while(ASTNode* cond, ASTNode* body);
+ASTNode* new_if(ASTNode* cond, ASTNode* if_body, ASTNode* else_body);
 ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right);
 ExprNode* new_expr_num(double d);
 ExprNode* new_expr_id(char* s);

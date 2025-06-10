@@ -1,0 +1,27 @@
+CANVAS 30 10
+
+num i = 0
+
+while (i < 10) {
+
+  if (i < 5) {
+    RECT (i * 2.5 + 1) 1 2 2 fill = #ff0000
+  } else {
+    RECT (i * 2.5 + 1) 1 2 2 fill = #0000ff
+  }
+
+
+  i = i + 1
+}
+
+num some_value = 10
+if (some_value == 10) {
+
+  RECT 1 5 28 2 fill = #00cc00
+}
+
+
+if (some_value < 0) {
+
+  RECT 1 8 10 2 fill = #ffff00
+}

@@ -15,6 +15,8 @@
 "LINE"      { return LINE; }
 "CANVAS"    { return CANVAS; }
 "while"     { return WHILE; }
+"if"        { return IF; }
+"else"      { return ELSE; }
 
 "<"         { return LT; }
 ">"         { return GT; }

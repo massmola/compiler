@@ -28,13 +28,13 @@ void free_expr(ExprNode *e);
 %token <sval> ID
 %token <dval> NUM
 %token <sval> COLOR
-%token INT RECT FILL NUMDECL LINE CANVAS WHILE
+%token INT RECT FILL NUMDECL LINE CANVAS WHILE IF ELSE
 %token LT GT EQ NE LE GE
 
 %left '+' '-'
 %left '*' '/'
 
-%type <node> program stmts stmt rect_cmd line_cmd decl while_loop condition assignment
+%type <node> program stmts stmt rect_cmd line_cmd decl while_loop if_stmt condition assignment
 %type <expr> expr color_arg fill_opt line_opt
 %type <op> cmp_op
 
@@ -56,7 +56,12 @@ optional_canvas_decl: /* empty */
     ;
 
 stmts: /* empty */  { $$ = NULL; } | stmts stmt { $$ = new_stmt_list($2, $1); } ;
-stmt: decl | assignment | rect_cmd | line_cmd | while_loop ;
+stmt: decl | assignment | rect_cmd | line_cmd | while_loop | if_stmt ;
+
+if_stmt: IF '(' condition ')' '{' stmts '}' { $$ = new_if($3, $6, NULL); }
+    | IF '(' condition ')' '{' stmts '}' ELSE '{' stmts '}' { $$ = new_if($3, $6, $10); } /* <--- THIS IS THE FIX */
+    ;
+
 while_loop: WHILE '(' condition ')' '{' stmts '}' { $$ = new_while($3, $6); } ;
 condition: expr cmp_op expr { $$ = new_condition($2, $1, $3); } ;
 cmp_op: LT { $$ = OP_LT; } | GT { $$ = OP_GT; } | EQ { $$ = OP_EQ; } | NE { $$ = OP_NE; } | LE { $$ = OP_LE; } | GE { $$ = OP_GE; } ;
@@ -93,6 +98,7 @@ ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, Ex
 ASTNode* new_decl(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_DECL; n->node.decl.name = name; n->node.decl.value = val; return n; }
 ASTNode* new_assignment(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_ASSIGNMENT; n->node.decl.name = name; n->node.decl.value = val; return n; }
 ASTNode* new_while(ASTNode* cond, ASTNode* body) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_WHILE; n->node.while_loop.condition = cond; n->node.while_loop.body = body; return n; }
+ASTNode* new_if(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_IF; n->node.if_stmt.condition = cond; n->node.if_stmt.if_body = if_body; n->node.if_stmt.else_body = else_body; return n; }
 ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_CONDITION; n->node.condition.op = op; n->node.condition.left = left; n->node.condition.right = right; return n; }
 ExprNode* new_expr_num(double d) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_NUM; e->data.dval = d; return e; }
 ExprNode* new_expr_id(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_ID; e->data.sval = s; return e; }
@@ -139,6 +145,13 @@ void eval_ast(ASTNode *n) {
                 eval_ast(n->node.while_loop.body);
             }
             break;
+        case NODE_TYPE_IF:
+            if (eval_condition(&n->node.if_stmt.condition->node.condition)) {
+                eval_ast(n->node.if_stmt.if_body);
+            } else if (n->node.if_stmt.else_body) {
+                eval_ast(n->node.if_stmt.else_body);
+            }
+            break;
         default: break;
     }
 }
@@ -171,6 +184,7 @@ void free_ast(ASTNode *n) {
         case NODE_TYPE_RECT: free_expr(n->node.rect.x); free_expr(n->node.rect.y); free_expr(n->node.rect.w); free_expr(n->node.rect.h); free_expr(n->node.rect.fill); break;
         case NODE_TYPE_LINE: free_expr(n->node.line.x1); free_expr(n->node.line.y1); free_expr(n->node.line.x2); free_expr(n->node.line.y2); free_expr(n->node.line.stroke); break;
         case NODE_TYPE_WHILE: free_ast(n->node.while_loop.condition); free_ast(n->node.while_loop.body); break;
+        case NODE_TYPE_IF: free_ast(n->node.if_stmt.condition); free_ast(n->node.if_stmt.if_body); if (n->node.if_stmt.else_body) free_ast(n->node.if_stmt.else_body); break;
         case NODE_TYPE_CONDITION: free_expr(n->node.condition.left); free_expr(n->node.condition.right); break;
         default: break;
     }
