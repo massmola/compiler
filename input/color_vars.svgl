@@ -1,12 +1,13 @@
 // define color variables
 color background = #f0f0f0;
 color main_border = #444444;
-color title_color = #cc0000;
+color title_color = #cc0000
+color test = #eee
 
 // Draw a background and a border for the page
 RECT 0 0 21 29.7 fill = background
 LINE 1 1 20 1 fill = main_border
-LINE 1 28.7 20 28.7 fill = main_border
+LINE 1 28.7 20 28.7 fill = main_border;
 
 // Use a color variable for a line 
 LINE 1 2 20 2 fill = title_color

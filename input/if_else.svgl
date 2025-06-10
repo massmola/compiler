@@ -18,7 +18,7 @@ while (i < 10) {
 num some_value = 10
 if (some_value == 10) {
 
-  RECT 1 5 28 2 fill = #00cc00
+  RECT 1 5 28 2 fill = green
 }
 
 
