@@ -162,8 +162,8 @@ while (i < 5) {
 // A simple drawing with a loop and variables
 CANVAS 30 30
 
-color bg = "#FAFAFA"
-color line_color = "#333"
+color bg = #FAFAFA
+color line_color = #333
 
 // Draw a background rectangle
 RECT 0 0 30 30 fill=bg
@@ -174,7 +174,7 @@ num size = 28
 num offset = 1
 
 while (i < 14) {
-  RECT offset offset size size fill="none" // SVG 'none' fill means transparent
+  RECT offset offset size size 
   
   // Update variables for the next iteration
   size = size - 2
@@ -183,13 +183,21 @@ while (i < 14) {
 }
 
 // Draw a red line across the middle
-LINE 0 15 30 15 fill="red"
+LINE 0 15 30 15 fill=red
+```
+
+#### there is block scoping
+```
+while (i < 5) {
+    num x = x + i
+}
+num y = i // will result in error
 ```
 
 ## 4. How to Compile and Run
 
 #### Prerequisites
-You need `flex`, `bison`, and the C `gcc`. On a Debian/Ubuntu system, you can install them with:
+You need `flex`, `bison`, and `gcc`. On a Debian/Ubuntu system, you can install them with:
 ```bash
 sudo apt-get install flex bison build-essential
 ```

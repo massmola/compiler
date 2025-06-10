@@ -9,4 +9,6 @@ graphicslang.tab.h
 parser.tab.c
 parser.tab.h
 compiler
+*.html
+
 
