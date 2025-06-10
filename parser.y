@@ -4,14 +4,18 @@
 #include <string.h>
 #include "ast.h"
 
+// Maximum variables per scope and scope depth
 #define MAX_VARS_PER_SCOPE 50
 #define MAX_SCOPE_DEPTH 20
 
+// Default canvas size
 double canvas_width = 21.0;
 double canvas_height = 29.7;
 
+// Variable type enum
 typedef enum { VAR_TYPE_NUM, VAR_TYPE_COLOR } VarType;
 
+// Variable structure
 struct var {
     char name[32];
     VarType type;
@@ -21,17 +25,21 @@ struct var {
     } value;
 };
 
+// Scope structure
 struct scope {
     struct var vars[MAX_VARS_PER_SCOPE];
     int var_count;
 };
 
+// Stack of scopes
 struct scope scope_stack[MAX_SCOPE_DEPTH];
 int scope_level = -1;
 
+// Lexer and error function declarations
 int yylex(void);
 int yyerror(const char *s);
 
+// Scope and variable management
 void enter_scope();
 void exit_scope();
 void declare_num_var(const char *name, double value);
@@ -45,27 +53,33 @@ void free_expr(ExprNode *e);
 
 %}
 
+// Bison union for token values
 %union {
     int ival; double dval; char *sval;
     ASTNode *node; ExprNode *expr; CmpOp op;
 }
 
+// Token definitions
 %token <sval> ID
 %token <dval> NUM
 %token <sval> COLOR
 %token INT RECT FILL NUMDECL COLORDECL LINE CANVAS WHILE IF ELSE
 %token LT GT EQ NE LE GE
 
+// Operator precedence
 %left '+' '-'
 %left '*' '/'
 
+// Nonterminal type declarations
 %type <node> program stmts stmt decl_num decl_color rect_cmd line_cmd while_loop if_stmt condition assignment
 %type <expr> expr color_arg fill_opt line_opt
 %type <op> cmp_op
 
 %%
 
+// Grammar rules
 program: optional_canvas_decl stmts {
+        // Print SVG header, enter global scope, evaluate AST, print SVG footer
         printf("<svg width=\"%gcm\" height=\"%gcm\" xmlns=\"http://www.w3.org/2000/svg\">\n", canvas_width, canvas_height);
         enter_scope();
         if ($2) { eval_ast($2); free_ast($2); }
@@ -76,6 +90,7 @@ program: optional_canvas_decl stmts {
 
 optional_canvas_decl: /* empty */
     | CANVAS expr expr {
+        // Set canvas size if declared
         canvas_width = eval_expr_numeric($2);
         canvas_height = eval_expr_numeric($3);
         free_expr($2); free_expr($3);
@@ -117,14 +132,17 @@ color_arg: ID { $$ = new_expr_id($1); } | COLOR { $$ = new_expr_color($1); } ;
 %%
 
 int main(void) { return yyparse(); }
+// Error reporting
 int yyerror(const char *s) { fprintf(stderr, "Parse Error: %s\n", s); return 1; }
 
+// Enter a new variable scope
 void enter_scope() {
     if (scope_level >= MAX_SCOPE_DEPTH - 1) { fprintf(stderr, "Runtime Error: Maximum scope depth exceeded.\n"); exit(1); }
     scope_level++;
     scope_stack[scope_level].var_count = 0;
 }
 
+// Exit the current variable scope
 void exit_scope() {
     if (scope_level < 0) { fprintf(stderr, "Runtime Error: No scope to exit.\n"); return; }
     struct scope *current_scope = &scope_stack[scope_level];
@@ -136,6 +154,7 @@ void exit_scope() {
     scope_level--;
 }
 
+// Find a variable by name, searching from innermost to outermost scope
 struct var* find_var(const char *name) {
     for (int i = scope_level; i >= 0; --i) {
         for (int j = 0; j < scope_stack[i].var_count; ++j) {
@@ -147,6 +166,7 @@ struct var* find_var(const char *name) {
     return NULL;
 }
 
+// Declare a numeric variable in the current scope
 void declare_num_var(const char *name, double value) {
     if (scope_level < 0) enter_scope();
     struct scope *current_scope = &scope_stack[scope_level];
@@ -160,6 +180,7 @@ void declare_num_var(const char *name, double value) {
     new_var->value.dval = value;
 }
 
+// Declare a color variable in the current scope
 void declare_color_var(const char *name, const char *value) {
     if (scope_level < 0) enter_scope();
     struct scope *current_scope = &scope_stack[scope_level];
@@ -173,6 +194,7 @@ void declare_color_var(const char *name, const char *value) {
     new_var->value.sval = strdup(value);
 }
 
+// Update a variable's value by evaluating an expression
 int update_var_value(const char* name, ExprNode* expr) {
     struct var* v = find_var(name);
     if (!v) {
@@ -192,6 +214,7 @@ int update_var_value(const char* name, ExprNode* expr) {
     return 1;
 }
 
+// Get the value of a numeric variable
 double get_num_var_value(const char* name) {
     struct var* v = find_var(name);
     if (!v) {
@@ -205,6 +228,7 @@ double get_num_var_value(const char* name) {
     return v->value.dval;
 }
 
+// Get the value of a color variable
 const char* get_color_var_value(const char* name) {
     struct var* v = find_var(name);
     if (!v) {
@@ -218,6 +242,7 @@ const char* get_color_var_value(const char* name) {
     return v->value.sval;
 }
 
+// AST node constructors
 ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next) {
     ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
     if (!n) exit(1);
@@ -307,6 +332,7 @@ ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right) {
     return n;
 }
 
+// Expression node constructors
 ExprNode* new_expr_num(double d) {
     ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode));
     if (!e) exit(1);
@@ -341,6 +367,7 @@ ExprNode* new_expr_op(int op, ExprNode* left, ExprNode* right) {
     return e;
 }
 
+// Evaluate a numeric expression
 double eval_expr_numeric(ExprNode *expr) {
     if (!expr) return 0.0;
     switch (expr->type) {
@@ -360,6 +387,7 @@ double eval_expr_numeric(ExprNode *expr) {
     }
 }
 
+// Evaluate a color/string expression
 const char* eval_expr_string(ExprNode *expr) {
     if (!expr) return "black";
 
@@ -392,8 +420,10 @@ const char* eval_expr_string(ExprNode *expr) {
     }
 }
 
+// Evaluate a condition node
 int eval_condition(ConditionNode *cond) { double left = eval_expr_numeric(cond->left); double right = eval_expr_numeric(cond->right); switch(cond->op) { case OP_LT: return left < right; case OP_GT: return left > right; case OP_EQ: return left == right; case OP_NE: return left != right; case OP_LE: return left <= right; case OP_GE: return left >= right; default: return 0; } }
 
+// Evaluate the AST recursively
 void eval_ast(ASTNode *n) {
     if (!n) return;
     switch(n->type) {
@@ -439,6 +469,7 @@ void eval_ast(ASTNode *n) {
     }
 }
 
+// Free an expression node and its children
 void free_expr(ExprNode *e) {
     if (!e) return; switch(e->type) { 
         case NODE_TYPE_EXPR_ID: 
@@ -451,6 +482,7 @@ void free_expr(ExprNode *e) {
     }
     free(e); 
 }
+// Free an AST node and its children
 void free_ast(ASTNode *n) { 
     if (!n) return; 
     switch(n->type) { 
