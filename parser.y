@@ -218,19 +218,128 @@ const char* get_color_var_value(const char* name) {
     return v->value.sval;
 }
 
-ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_STMTS; n->node.stmts.stmt = stmt; n->node.stmts.next = next; return n; }
-ASTNode* new_rect_cmd(ExprNode *x, ExprNode *y, ExprNode *w, ExprNode *h, ExprNode *fill) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_RECT; n->node.rect.x = x; n->node.rect.y = y; n->node.rect.w = w; n->node.rect.h = h; n->node.rect.fill = fill; return n; }
-ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, ExprNode *stroke) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_LINE; n->node.line.x1 = x1; n->node.line.y1 = y1; n->node.line.x2 = x2; n->node.line.y2 = y2; n->node.line.stroke = stroke; return n; }
-ASTNode* new_decl_num(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_DECL_NUM; n->node.decl.name = name; n->node.decl.value = val; return n; }
-ASTNode* new_decl_color(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_DECL_COLOR; n->node.decl.name = name; n->node.decl.value = val; return n; }
-ASTNode* new_assignment(char* name, ExprNode* val) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_ASSIGNMENT; n->node.decl.name = name; n->node.decl.value = val; return n; }
-ASTNode* new_while(ASTNode* cond, ASTNode* body) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_WHILE; n->node.while_loop.condition = cond; n->node.while_loop.body = body; return n; }
-ASTNode* new_if(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_IF; n->node.if_stmt.condition = cond; n->node.if_stmt.if_body = if_body; n->node.if_stmt.else_body = else_body; return n; }
-ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_CONDITION; n->node.condition.op = op; n->node.condition.left = left; n->node.condition.right = right; return n; }
-ExprNode* new_expr_num(double d) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_NUM; e->data.dval = d; return e; }
-ExprNode* new_expr_id(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_ID; e->data.sval = s; return e; }
-ExprNode* new_expr_color(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_COLOR; e->data.sval = s; return e; }
-ExprNode* new_expr_op(int op, ExprNode* left, ExprNode* right) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_OP; e->data.op.op = op; e->data.op.left = left; e->data.op.right = right; return e; }
+ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_STMTS;
+    n->node.stmts.stmt = stmt;
+    n->node.stmts.next = next;
+    return n;
+}
+
+ASTNode* new_rect_cmd(ExprNode *x, ExprNode *y, ExprNode *w, ExprNode *h, ExprNode *fill) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_RECT;
+    n->node.rect.x = x;
+    n->node.rect.y = y;
+    n->node.rect.w = w;
+    n->node.rect.h = h;
+    n->node.rect.fill = fill;
+    return n;
+}
+
+ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, ExprNode *stroke) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_LINE;
+    n->node.line.x1 = x1;
+    n->node.line.y1 = y1;
+    n->node.line.x2 = x2;
+    n->node.line.y2 = y2;
+    n->node.line.stroke = stroke;
+    return n;
+}
+
+ASTNode* new_decl_num(char* name, ExprNode* val) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_DECL_NUM;
+    n->node.decl.name = name;
+    n->node.decl.value = val;
+    return n;
+}
+
+ASTNode* new_decl_color(char* name, ExprNode* val) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_DECL_COLOR;
+    n->node.decl.name = name;
+    n->node.decl.value = val;
+    return n;
+}
+
+ASTNode* new_assignment(char* name, ExprNode* val) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_ASSIGNMENT;
+    n->node.decl.name = name;
+    n->node.decl.value = val;
+    return n;
+}
+
+ASTNode* new_while(ASTNode* cond, ASTNode* body) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_WHILE;
+    n->node.while_loop.condition = cond;
+    n->node.while_loop.body = body;
+    return n;
+}
+
+ASTNode* new_if(ASTNode* cond, ASTNode* if_body, ASTNode* else_body) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_IF;
+    n->node.if_stmt.condition = cond;
+    n->node.if_stmt.if_body = if_body;
+    n->node.if_stmt.else_body = else_body;
+    return n;
+}
+
+ASTNode* new_condition(CmpOp op, ExprNode* left, ExprNode* right) {
+    ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode));
+    if (!n) exit(1);
+    n->type = NODE_TYPE_CONDITION;
+    n->node.condition.op = op;
+    n->node.condition.left = left;
+    n->node.condition.right = right;
+    return n;
+}
+
+ExprNode* new_expr_num(double d) {
+    ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode));
+    if (!e) exit(1);
+    e->type = NODE_TYPE_EXPR_NUM;
+    e->data.dval = d;
+    return e;
+}
+
+ExprNode* new_expr_id(char* s) {
+    ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode));
+    if (!e) exit(1);
+    e->type = NODE_TYPE_EXPR_ID;
+    e->data.sval = s;
+    return e;
+}
+
+ExprNode* new_expr_color(char* s) {
+    ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode));
+    if (!e) exit(1);
+    e->type = NODE_TYPE_EXPR_COLOR;
+    e->data.sval = s;
+    return e;
+}
+
+ExprNode* new_expr_op(int op, ExprNode* left, ExprNode* right) {
+    ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode));
+    if (!e) exit(1);
+    e->type = NODE_TYPE_EXPR_OP;
+    e->data.op.op = op;
+    e->data.op.left = left;
+    e->data.op.right = right;
+    return e;
+}
 
 double eval_expr_numeric(ExprNode *expr) {
     if (!expr) return 0.0;
@@ -298,8 +407,20 @@ void eval_ast(ASTNode *n) {
         case NODE_TYPE_ASSIGNMENT:
             update_var_value(n->node.decl.name, n->node.decl.value);
             break;
-        case NODE_TYPE_RECT: { double x = eval_expr_numeric(n->node.rect.x); double y = eval_expr_numeric(n->node.rect.y); double w = eval_expr_numeric(n->node.rect.w); double h = eval_expr_numeric(n->node.rect.h); printf("  <rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\" fill=\"%s\"/>\n", x, y, w, h, eval_expr_string(n->node.rect.fill)); break; }
-        case NODE_TYPE_LINE: { double x1 = eval_expr_numeric(n->node.line.x1); double y1 = eval_expr_numeric(n->node.line.y1); double x2 = eval_expr_numeric(n->node.line.x2); double y2 = eval_expr_numeric(n->node.line.y2); printf("  <line x1=\"%gcm\" y1=\"%gcm\" x2=\"%gcm\" y2=\"%gcm\" stroke=\"%s\" stroke-width=\"0.1cm\"/>\n", x1, y1, x2, y2, eval_expr_string(n->node.line.stroke)); break; }
+        case NODE_TYPE_RECT: { 
+            double x = eval_expr_numeric(n->node.rect.x); 
+            double y = eval_expr_numeric(n->node.rect.y); 
+            double w = eval_expr_numeric(n->node.rect.w); 
+            double h = eval_expr_numeric(n->node.rect.h); 
+            printf("  <rect x=\"%gcm\" y=\"%gcm\" width=\"%gcm\" height=\"%gcm\" fill=\"%s\"/>\n", x, y, w, h, eval_expr_string(n->node.rect.fill)); 
+            break; }
+        case NODE_TYPE_LINE: { 
+            double x1 = eval_expr_numeric(n->node.line.x1); 
+            double y1 = eval_expr_numeric(n->node.line.y1); 
+            double x2 = eval_expr_numeric(n->node.line.x2); 
+            double y2 = eval_expr_numeric(n->node.line.y2); 
+            printf("  <line x1=\"%gcm\" y1=\"%gcm\" x2=\"%gcm\" y2=\"%gcm\" stroke=\"%s\" stroke-width=\"0.1cm\"/>\n", x1, y1, x2, y2, eval_expr_string(n->node.line.stroke)); 
+            break; }
         case NODE_TYPE_WHILE:
             while(eval_condition(&n->node.while_loop.condition->node.condition)) {
                 enter_scope();
@@ -318,5 +439,59 @@ void eval_ast(ASTNode *n) {
     }
 }
 
-void free_expr(ExprNode *e) { if (!e) return; switch(e->type) { case NODE_TYPE_EXPR_ID: case NODE_TYPE_EXPR_COLOR: free(e->data.sval); break; case NODE_TYPE_EXPR_OP: free_expr(e->data.op.left); free_expr(e->data.op.right); break; case NODE_TYPE_EXPR_NUM: break; default: break; } free(e); }
-void free_ast(ASTNode *n) { if (!n) return; switch(n->type) { case NODE_TYPE_STMTS: free_ast(n->node.stmts.stmt); free_ast(n->node.stmts.next); break; case NODE_TYPE_ASSIGNMENT: case NODE_TYPE_DECL_NUM: case NODE_TYPE_DECL_COLOR: free(n->node.decl.name); free_expr(n->node.decl.value); break; case NODE_TYPE_RECT: free_expr(n->node.rect.x); free_expr(n->node.rect.y); free_expr(n->node.rect.w); free_expr(n->node.rect.h); free_expr(n->node.rect.fill); break; case NODE_TYPE_LINE: free_expr(n->node.line.x1); free_expr(n->node.line.y1); free_expr(n->node.line.x2); free_expr(n->node.line.y2); free_expr(n->node.line.stroke); break; case NODE_TYPE_WHILE: free_ast(n->node.while_loop.condition); free_ast(n->node.while_loop.body); break; case NODE_TYPE_IF: free_ast(n->node.if_stmt.condition); free_ast(n->node.if_stmt.if_body); if (n->node.if_stmt.else_body) free_ast(n->node.if_stmt.else_body); break; case NODE_TYPE_CONDITION: free_expr(n->node.condition.left); free_expr(n->node.condition.right); break; default: break; } free(n); }
+void free_expr(ExprNode *e) {
+    if (!e) return; switch(e->type) { 
+        case NODE_TYPE_EXPR_ID: 
+        case NODE_TYPE_EXPR_COLOR: 
+            free(e->data.sval); break; 
+        case NODE_TYPE_EXPR_OP: 
+            free_expr(e->data.op.left); free_expr(e->data.op.right); break; 
+        case NODE_TYPE_EXPR_NUM: break; 
+        default: break; 
+    }
+    free(e); 
+}
+void free_ast(ASTNode *n) { 
+    if (!n) return; 
+    switch(n->type) { 
+        case NODE_TYPE_STMTS: 
+            free_ast(n->node.stmts.stmt); 
+            free_ast(n->node.stmts.next); 
+            break; 
+        case NODE_TYPE_ASSIGNMENT: 
+        case NODE_TYPE_DECL_NUM: 
+        case NODE_TYPE_DECL_COLOR: 
+            free(n->node.decl.name); 
+            free_expr(n->node.decl.value); 
+            break; 
+        case NODE_TYPE_RECT: 
+            free_expr(n->node.rect.x); 
+            free_expr(n->node.rect.y); 
+            free_expr(n->node.rect.w); 
+            free_expr(n->node.rect.h); 
+            free_expr(n->node.rect.fill); 
+            break; 
+        case NODE_TYPE_LINE: 
+            free_expr(n->node.line.x1); 
+            free_expr(n->node.line.y1); 
+            free_expr(n->node.line.x2); 
+            free_expr(n->node.line.y2); 
+            free_expr(n->node.line.stroke); 
+            break; 
+        case NODE_TYPE_WHILE: 
+            free_ast(n->node.while_loop.condition); 
+            free_ast(n->node.while_loop.body); 
+            break; 
+        case NODE_TYPE_IF: 
+            free_ast(n->node.if_stmt.condition); 
+            free_ast(n->node.if_stmt.if_body); 
+            if (n->node.if_stmt.else_body) free_ast(n->node.if_stmt.else_body); break; 
+        case NODE_TYPE_CONDITION: 
+                free_expr(n->node.condition.left); 
+                free_expr(n->node.condition.right); 
+                break; 
+            default: break; 
+    } 
+    free(n); 
+ }
+

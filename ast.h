@@ -23,10 +23,9 @@ typedef enum {
     OP_LT = 1, OP_GT, OP_EQ, OP_NE, OP_LE, OP_GE
 } CmpOp;
 
-// Forward-declare the main struct so pointers can be used inside
+// declare the main struct so pointers can be used inside
 struct ASTNode;
-
-// Forward-declare ExprNode for use in OpNode
+// declare ExprNode for use in OpNode
 struct ExprNode;
 
 // Node for a binary operation in an expression
@@ -112,7 +111,7 @@ typedef struct ASTNode {
     } node;
 } ASTNode;
 
-/* --- Function Prototypes for AST Helper/Evaluator Functions --- */
+/* ---  AST Helper/Evaluator Functions --- */
 
 ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next);
 ASTNode* new_rect_cmd(ExprNode *x, ExprNode *y, ExprNode *w, ExprNode *h, ExprNode *fill);
@@ -132,4 +131,4 @@ void eval_ast(struct ASTNode *node);
 void free_ast(struct ASTNode *node);
 void free_expr(ExprNode *e);
 
-#endif // AST_H
+#endif 
