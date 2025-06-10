@@ -1,6 +1,6 @@
 %{
-#include "ast.h"          // Define AST types first
-#include "parser.tab.h"   // Then include the parser header that uses them
+#include "ast.h"
+#include "parser.tab.h"
 #include <stdlib.h>
 #include <string.h>
 %}
@@ -12,6 +12,7 @@
 "RECT"      { return RECT; }
 "fill"      { return FILL; }
 "num"       { return NUMDECL; }
+"color"     { return COLORDECL; }
 "LINE"      { return LINE; }
 "CANVAS"    { return CANVAS; }
 "while"     { return WHILE; }
@@ -35,7 +36,7 @@
 "*"         { return '*'; }
 "/"         { return '/'; }
 
-"//"[^\n]*            { /* <<< NEW RULE: Ignore single-line comments */ }
+"//"[^\n]*            { /* Ignore single-line comments */ }
 
 "#"[a-fA-F0-9]{6}      { yylval.sval = strdup(yytext); return COLOR; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.sval = strdup(yytext); return ID; }
