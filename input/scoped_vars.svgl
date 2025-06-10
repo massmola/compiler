@@ -1,0 +1,39 @@
+// Test file for block-scoped variables
+
+CANVAS 30 15
+
+// Global variable 'x' will be used to draw the first square's position.
+// Global variable 'i' will be used for a loop.
+num x = 2
+num i = 0
+
+// This first square uses the global 'x'. Should be at x=2.
+RECT x 1 4 4 fill = #ff0000 // Red square
+
+// This while loop will demonstrate shadowing.
+// It declares a NEW variable 'x' inside its scope.
+while (i < 3) {
+  // This 'x' is local to the while loop and shadows the global 'x'.
+  // Its value will be 10, 11, 12.
+  num x = 10 + i
+
+  // This square's position is determined by the LOCAL 'x'.
+  // It should be drawn at x=10, x=11, and x=12.
+  RECT x (1 + i * 2) 1 1 fill = #0000ff // Small blue squares
+
+  i = i + 1
+}
+
+// Now that the loop is finished, the local 'x' is gone.
+// We are back in the global scope. The global 'x' should still be 2.
+// This final square's position should be determined by the GLOBAL 'x' again.
+// It should be drawn at x=2, not 12.
+RECT x 8 4 4 fill = #00cc00 // Green square
+
+// This tests that a variable declared in an 'if' block is not visible outside.
+if (i == 3) {
+    num temp_var = 100
+}
+// Trying to use temp_var here would (and should) cause a runtime error
+// because it only existed inside the 'if' block above.
+// For this test, we won't use it, just prove it doesn't leak.
