@@ -35,6 +35,8 @@
 "*"         { return '*'; }
 "/"         { return '/'; }
 
+"//"[^\n]*            { /* <<< NEW RULE: Ignore single-line comments */ }
+
 "#"[a-fA-F0-9]{6}      { yylval.sval = strdup(yytext); return COLOR; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.sval = strdup(yytext); return ID; }
 [0-9]+(\.[0-9]+)?      { yylval.dval = atof(yytext); return NUM; }
