@@ -1,3 +1,4 @@
+// this file checks if 'if' and 'else' statements work properly
 CANVAS 30 10
 
 num i = 0

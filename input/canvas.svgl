@@ -1,3 +1,4 @@
+// changes the defoult size of the svg canvas
 CANVAS 40 30
 
 num x1 = 1
@@ -6,4 +7,5 @@ num y1 = 7
 num x2 = 10
 num y2 = 5
 
+// uses the variables to draw a line
 LINE x1 y1 x2 y2

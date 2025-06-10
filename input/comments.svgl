@@ -8,13 +8,12 @@ RECT 1 1 5 5 fill = #ff0000 // A red square
 // RECT 1 8 5 5 fill = #00ff00
 
 // We will use a variable.
-num x_pos = 10
+num x_pos = 10 // it is possible to write comments after a statement
 
 // This line should also be drawn.
 RECT x_pos 1 5 5 fill = #0000ff // A blue square
 
 // The condition in this 'if' statement is true,
-// so the line should be drawn.
 if (x_pos > 5) {
     // A diagonal line
     LINE 1 18 19 2

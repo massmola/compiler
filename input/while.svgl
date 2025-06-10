@@ -1,3 +1,4 @@
+// this file tests if the while loop works
 CANVAS 20 10
 
 num i = 1

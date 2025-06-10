@@ -1,10 +1,13 @@
+// declaring variables
 num a = 10 + 5
 num b = 20 - 7
 num c = 4 * 3
 num d = 40 / 8
 
+// simple aritmetc operations
 num sum = a + b + c + d
 num product = a * b * c * d
 num average = (a + b + c + d) / 4
 
+// check if the operations where correct
 RECT a b c average fill=red

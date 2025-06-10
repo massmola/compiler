@@ -1,3 +1,4 @@
+// test rectangle with vars
 num x = 4
 num y = 3.5
 num w = 2

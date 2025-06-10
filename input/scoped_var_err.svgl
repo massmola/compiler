@@ -1,0 +1,8 @@
+
+// This tests that a variable declared in an 'if' block is not visible outside.
+if (42 == 42) {
+    num temp_var = 100
+}
+
+// should result in an Error
+LINE temp_var 1 1 1

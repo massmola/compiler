@@ -4,23 +4,20 @@
 #include <string.h>
 #include "ast.h"
 
-// --- Data Structures for Scoped Variables (MODIFIED) ---
 #define MAX_VARS_PER_SCOPE 50
 #define MAX_SCOPE_DEPTH 20
 
 double canvas_width = 21.0;
 double canvas_height = 29.7;
 
-// NEW: Enum to distinguish variable types
 typedef enum { VAR_TYPE_NUM, VAR_TYPE_COLOR } VarType;
 
-// MODIFIED: Variable struct now holds different types
 struct var {
     char name[32];
     VarType type;
     union {
         double dval;
-        char* sval; // Value is now a union
+        char* sval;
     } value;
 };
 
@@ -35,12 +32,11 @@ int scope_level = -1;
 int yylex(void);
 int yyerror(const char *s);
 
-// Function prototypes
 void enter_scope();
 void exit_scope();
 void declare_num_var(const char *name, double value);
 void declare_color_var(const char *name, const char *value);
-int update_var_value(const char *name, ExprNode *expr); // Now takes an ExprNode
+int update_var_value(const char *name, ExprNode *expr);
 double get_num_var_value(const char *name);
 const char* get_color_var_value(const char *name);
 double eval_expr_numeric(ExprNode *expr);
@@ -95,17 +91,15 @@ if_stmt: IF '(' condition ')' '{' stmts '}' { $$ = new_if($3, $6, NULL); }
 
 while_loop: WHILE '(' condition ')' '{' stmts '}' { $$ = new_while($3, $6); } ;
 condition: expr cmp_op expr { $$ = new_condition($2, $1, $3); } ;
-cmp_op: LT { $$ = OP_LT; } | GT { $$ = OP_GT; } | EQ { $$ = OP_EQ; } | NE { $$ = OP_NE; } | LE { $$ = OP_LE; } | GE { $$ = OP_GE; } ;
+cmp_op: LT { $$ = OP_LT; } | GT { $$ = OP_GT; } | EQ { $$ = OP_EQ; } | NE { $$ = OP_NE; } | LE { $$ = OP_LE; } | GE { $$ = OP_GE; }  ;
 
-// MODIFIED: Split declaration into two types
 decl_num: NUMDECL ID '=' expr { $$ = new_decl_num($2, $4); } ;
 decl_color: COLORDECL ID '=' expr { $$ = new_decl_color($2, $4); } ;
 
 assignment: ID '=' expr { $$ = new_assignment($1, $3); } ;
 rect_cmd: RECT expr expr expr expr fill_opt { $$ = new_rect_cmd($2, $3, $4, $5, $6); } ;
-line_cmd: LINE expr expr expr expr line_opt { $$ = new_line_cmd($2, $3, $4, $5, $6); } ;
+line_cmd: LINE expr expr expr expr line_opt { $$ = new_line_cmd($2, $3, $4, $5, $6); }  ;
 
-// MODIFIED: expr can now be a color literal directly
 expr: NUM                 { $$ = new_expr_num($1); }
     | ID                  { $$ = new_expr_id($1); }
     | COLOR               { $$ = new_expr_color($1); }
@@ -125,16 +119,12 @@ color_arg: ID { $$ = new_expr_id($1); } | COLOR { $$ = new_expr_color($1); } ;
 int main(void) { return yyparse(); }
 int yyerror(const char *s) { fprintf(stderr, "Parse Error: %s\n", s); return 1; }
 
-/* --- C CODE SECTION (HEAVILY MODIFIED) --- */
-
-// --- Scope Management Functions ---
 void enter_scope() {
     if (scope_level >= MAX_SCOPE_DEPTH - 1) { fprintf(stderr, "Runtime Error: Maximum scope depth exceeded.\n"); exit(1); }
     scope_level++;
     scope_stack[scope_level].var_count = 0;
 }
 
-// MODIFIED: Must free string variables when exiting scope
 void exit_scope() {
     if (scope_level < 0) { fprintf(stderr, "Runtime Error: No scope to exit.\n"); return; }
     struct scope *current_scope = &scope_stack[scope_level];
@@ -146,7 +136,6 @@ void exit_scope() {
     scope_level--;
 }
 
-// Helper to find a var (searches all scopes) and returns a pointer to it
 struct var* find_var(const char *name) {
     for (int i = scope_level; i >= 0; --i) {
         for (int j = 0; j < scope_stack[i].var_count; ++j) {
@@ -158,8 +147,6 @@ struct var* find_var(const char *name) {
     return NULL;
 }
 
-// --- Variable Management Functions (MODIFIED) ---
-// Declares a new numeric variable in the CURRENT scope.
 void declare_num_var(const char *name, double value) {
     if (scope_level < 0) enter_scope();
     struct scope *current_scope = &scope_stack[scope_level];
@@ -173,7 +160,6 @@ void declare_num_var(const char *name, double value) {
     new_var->value.dval = value;
 }
 
-// NEW: Declares a new color variable in the CURRENT scope.
 void declare_color_var(const char *name, const char *value) {
     if (scope_level < 0) enter_scope();
     struct scope *current_scope = &scope_stack[scope_level];
@@ -184,10 +170,9 @@ void declare_color_var(const char *name, const char *value) {
     struct var *new_var = &current_scope->vars[current_scope->var_count++];
     strncpy(new_var->name, name, 31); new_var->name[31] = '\0';
     new_var->type = VAR_TYPE_COLOR;
-    new_var->value.sval = strdup(value); // We own this memory now
+    new_var->value.sval = strdup(value);
 }
 
-// MODIFIED: Assigns a value to an EXISTING variable, with type checking
 int update_var_value(const char* name, ExprNode* expr) {
     struct var* v = find_var(name);
     if (!v) {
@@ -198,8 +183,8 @@ int update_var_value(const char* name, ExprNode* expr) {
         v->value.dval = eval_expr_numeric(expr);
     } else if (v->type == VAR_TYPE_COLOR) {
         const char* new_val_str = eval_expr_string(expr);
-        free(v->value.sval); // Free old string value
-        v->value.sval = strdup(new_val_str); // Assign new one
+        free(v->value.sval);
+        v->value.sval = strdup(new_val_str);
     } else {
         fprintf(stderr, "Runtime Error: Unknown type for variable '%s'\n", name);
         return 0;
@@ -207,23 +192,32 @@ int update_var_value(const char* name, ExprNode* expr) {
     return 1;
 }
 
-// MODIFIED: Gets a numeric variable's value, with type checking
 double get_num_var_value(const char* name) {
     struct var* v = find_var(name);
-    if (!v) { fprintf(stderr, "Runtime Error: undefined variable '%s'\n", name); return 0.0; }
-    if (v->type != VAR_TYPE_NUM) { fprintf(stderr, "Runtime Error: variable '%s' is not a number.\n", name); return 0.0; }
+    if (!v) {
+        fprintf(stderr, "Runtime Error: undefined variable '%s'\n", name);
+        return 0.0;
+    }
+    if (v->type != VAR_TYPE_NUM) {
+        fprintf(stderr, "Runtime Error: variable '%s' is not a number.\n", name);
+        return 0.0;
+    }
     return v->value.dval;
 }
 
-// NEW: Gets a color variable's value, with type checking
 const char* get_color_var_value(const char* name) {
     struct var* v = find_var(name);
-    if (!v) { fprintf(stderr, "Runtime Error: undefined variable '%s'\n", name); return "black"; }
-    if (v->type != VAR_TYPE_COLOR) { fprintf(stderr, "Runtime Error: variable '%s' is not a color.\n", name); return "black"; }
+    if (!v) {
+        fprintf(stderr, "Runtime Error: undefined variable '%s'\n", name);
+        return "black";
+    }
+    if (v->type != VAR_TYPE_COLOR) {
+        fprintf(stderr, "Runtime Error: variable '%s' is not a color.\n", name);
+        return "black";
+    }
     return v->value.sval;
 }
 
-// --- AST Helper and Creation Functions ---
 ASTNode* new_stmt_list(ASTNode* stmt, ASTNode* next) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_STMTS; n->node.stmts.stmt = stmt; n->node.stmts.next = next; return n; }
 ASTNode* new_rect_cmd(ExprNode *x, ExprNode *y, ExprNode *w, ExprNode *h, ExprNode *fill) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_RECT; n->node.rect.x = x; n->node.rect.y = y; n->node.rect.w = w; n->node.rect.h = h; n->node.rect.fill = fill; return n; }
 ASTNode* new_line_cmd(ExprNode *x1, ExprNode *y1, ExprNode *x2, ExprNode *y2, ExprNode *stroke) { ASTNode *n = (ASTNode*) malloc(sizeof(ASTNode)); if (!n) exit(1); n->type = NODE_TYPE_LINE; n->node.line.x1 = x1; n->node.line.y1 = y1; n->node.line.x2 = x2; n->node.line.y2 = y2; n->node.line.stroke = stroke; return n; }
@@ -237,8 +231,6 @@ ExprNode* new_expr_num(double d) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprN
 ExprNode* new_expr_id(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_ID; e->data.sval = s; return e; }
 ExprNode* new_expr_color(char* s) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_COLOR; e->data.sval = s; return e; }
 ExprNode* new_expr_op(int op, ExprNode* left, ExprNode* right) { ExprNode *e = (ExprNode*) malloc(sizeof(ExprNode)); if (!e) exit(1); e->type = NODE_TYPE_EXPR_OP; e->data.op.op = op; e->data.op.left = left; e->data.op.right = right; return e; }
-
-// --- Evaluation Functions (MODIFIED) ---
 
 double eval_expr_numeric(ExprNode *expr) {
     if (!expr) return 0.0;
@@ -260,27 +252,22 @@ double eval_expr_numeric(ExprNode *expr) {
 }
 
 const char* eval_expr_string(ExprNode *expr) {
-    if (!expr) return "black"; // Default color
+    if (!expr) return "black";
 
     switch(expr->type) {
         case NODE_TYPE_EXPR_COLOR:
-            return expr->data.sval; // This is a literal like #ff0000
+            return expr->data.sval;
 
         case NODE_TYPE_EXPR_ID: {
-            // NEW LOGIC: "Try Variable, then Literal"
             struct var* v = find_var(expr->data.sval);
             if (v) {
-                // It IS a declared variable. Check its type.
                 if (v->type == VAR_TYPE_COLOR) {
-                    return v->value.sval; // Return the variable's value
+                    return v->value.sval;
                 } else {
-                    // It's a number variable (e.g. num x=5; fill=x)
                     fprintf(stderr, "Runtime Error: Variable '%s' is a number, not a color.\n", expr->data.sval);
-                    return "black"; // Return default on type error
+                    return "black";
                 }
             } else {
-                // It is NOT a declared variable.
-                // Fall back to treating it as a literal SVG color name (e.g., "red", "blue").
                 return expr->data.sval;
             }
         }
@@ -288,7 +275,7 @@ const char* eval_expr_string(ExprNode *expr) {
         case NODE_TYPE_EXPR_NUM:
         case NODE_TYPE_EXPR_OP:
             fprintf(stderr, "Runtime Error: Cannot use a number or numeric expression where a color is expected.\n");
-            return "black"; // Return default on error
+            return "black";
 
         default:
             fprintf(stderr, "Runtime Error: Invalid expression type for color evaluation.\n");
@@ -298,7 +285,6 @@ const char* eval_expr_string(ExprNode *expr) {
 
 int eval_condition(ConditionNode *cond) { double left = eval_expr_numeric(cond->left); double right = eval_expr_numeric(cond->right); switch(cond->op) { case OP_LT: return left < right; case OP_GT: return left > right; case OP_EQ: return left == right; case OP_NE: return left != right; case OP_LE: return left <= right; case OP_GE: return left >= right; default: return 0; } }
 
-// --- UPDATED eval_ast ---
 void eval_ast(ASTNode *n) {
     if (!n) return;
     switch(n->type) {
@@ -332,6 +318,5 @@ void eval_ast(ASTNode *n) {
     }
 }
 
-// --- Free Functions (MODIFIED) ---
 void free_expr(ExprNode *e) { if (!e) return; switch(e->type) { case NODE_TYPE_EXPR_ID: case NODE_TYPE_EXPR_COLOR: free(e->data.sval); break; case NODE_TYPE_EXPR_OP: free_expr(e->data.op.left); free_expr(e->data.op.right); break; case NODE_TYPE_EXPR_NUM: break; default: break; } free(e); }
 void free_ast(ASTNode *n) { if (!n) return; switch(n->type) { case NODE_TYPE_STMTS: free_ast(n->node.stmts.stmt); free_ast(n->node.stmts.next); break; case NODE_TYPE_ASSIGNMENT: case NODE_TYPE_DECL_NUM: case NODE_TYPE_DECL_COLOR: free(n->node.decl.name); free_expr(n->node.decl.value); break; case NODE_TYPE_RECT: free_expr(n->node.rect.x); free_expr(n->node.rect.y); free_expr(n->node.rect.w); free_expr(n->node.rect.h); free_expr(n->node.rect.fill); break; case NODE_TYPE_LINE: free_expr(n->node.line.x1); free_expr(n->node.line.y1); free_expr(n->node.line.x2); free_expr(n->node.line.y2); free_expr(n->node.line.stroke); break; case NODE_TYPE_WHILE: free_ast(n->node.while_loop.condition); free_ast(n->node.while_loop.body); break; case NODE_TYPE_IF: free_ast(n->node.if_stmt.condition); free_ast(n->node.if_stmt.if_body); if (n->node.if_stmt.else_body) free_ast(n->node.if_stmt.else_body); break; case NODE_TYPE_CONDITION: free_expr(n->node.condition.left); free_expr(n->node.condition.right); break; default: break; } free(n); }
