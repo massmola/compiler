@@ -2,7 +2,7 @@
 CC = gcc
 # Define compiler flags
 # -Wall enables all warnings, then -Wno-unused-function disables just this one.
-CFLAGS = -Wall -g -Wno-unused-function
+CFLAGS =
 
 # Define the final executable name
 EXEC = compiler
