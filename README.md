@@ -1,6 +1,8 @@
 ***
 # SVG Drawing Language Documentation
 
+> This project was made partially with the help of AI.
+
 ## 1. General Explanation
 
 This program is an interpreter for a simple, domain-specific language designed to generate Scalable Vector Graphics (SVG) files. It reads a source file written in this custom language, parses it, and executes the commands to produce a complete SVG image file as its output.
