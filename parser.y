@@ -432,15 +432,17 @@ const char* eval_expr_string(ExprNode *expr) {
         case NODE_TYPE_EXPR_ID: {
             struct var* v = find_var(expr->data.sval);
             if (v) {
+                // A variable with this name exists. Check if it's a color.
                 if (v->type == VAR_TYPE_COLOR) {
                     return v->value.sval;
                 } else {
+                    // It's a number, which is a type error here.
                     fprintf(stderr, "Runtime Error: Variable '%s' is a number, not a color.\n", expr->data.sval);
                     return "black";
                 }
             } else {
-                fprintf(stderr, "Runtime Error: Undefined variable '%s' used as a color.\n", expr->data.sval);
-                return "black";
+                // No variable found. Assume it's a built-in SVG color name like "red" or "blue".
+                return expr->data.sval;
             }
         }
 
