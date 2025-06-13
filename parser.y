@@ -4,10 +4,6 @@
 #include <string.h>
 #include "ast.h"
 
-// Maximum variables per scope and scope depth
-#define MAX_VARS_PER_SCOPE 50
-#define MAX_SCOPE_DEPTH 20
-
 // Default canvas size
 double canvas_width = 21.0;
 double canvas_height = 29.7;
@@ -23,23 +19,24 @@ struct var {
         double dval;
         char* sval;
     } value;
+    struct var *next; 
 };
 
 // Scope structure
 struct scope {
-    struct var vars[MAX_VARS_PER_SCOPE];
-    int var_count;
+    struct var *vars;       
+    struct scope *parent;   
 };
 
-// Stack of scopes
-struct scope scope_stack[MAX_SCOPE_DEPTH];
-int scope_level = -1;
+// pointer to the top of the scope stack 
+struct scope *current_scope = NULL;
+
 
 // Lexer and error function declarations
 int yylex(void);
 int yyerror(const char *s);
 
-// Scope and variable management
+// Scope and variable management function declarations (signatures are unchanged)
 void enter_scope();
 void exit_scope();
 void declare_num_var(const char *name, double value);
@@ -90,7 +87,6 @@ program: optional_canvas_decl stmts {
 
 optional_canvas_decl: /* empty */
     | CANVAS expr expr {
-        // Set canvas size if declared
         canvas_width = eval_expr_numeric($2);
         canvas_height = eval_expr_numeric($3);
         free_expr($2); free_expr($3);
@@ -132,66 +128,104 @@ color_arg: ID { $$ = new_expr_id($1); } | COLOR { $$ = new_expr_color($1); } ;
 %%
 
 int main(void) { return yyparse(); }
-// Error reporting
 int yyerror(const char *s) { fprintf(stderr, "Parse Error: %s\n", s); return 1; }
 
-// Enter a new variable scope
+// Enter a new variable scope by pushing it onto the stack
 void enter_scope() {
-    if (scope_level >= MAX_SCOPE_DEPTH - 1) { fprintf(stderr, "Runtime Error: Maximum scope depth exceeded.\n"); exit(1); }
-    scope_level++;
-    scope_stack[scope_level].var_count = 0;
+    struct scope *new_scope = (struct scope*)malloc(sizeof(struct scope));
+    if (!new_scope) {
+        fprintf(stderr, "Runtime Error: Out of memory for new scope.\n");
+        exit(1);
+    }
+    new_scope->vars = NULL; // No variables in this scope yet
+    new_scope->parent = current_scope; // Link to the outer scope
+    current_scope = new_scope; // The new scope is now the current one
 }
 
-// Exit the current variable scope
+// Exit the current scope, freeing all its variables and the scope itself
 void exit_scope() {
-    if (scope_level < 0) { fprintf(stderr, "Runtime Error: No scope to exit.\n"); return; }
-    struct scope *current_scope = &scope_stack[scope_level];
-    for (int i = 0; i < current_scope->var_count; ++i) {
-        if (current_scope->vars[i].type == VAR_TYPE_COLOR) {
-            free(current_scope->vars[i].value.sval);
-        }
+    if (!current_scope) {
+        fprintf(stderr, "Runtime Error: No scope to exit.\n");
+        return;
     }
-    scope_level--;
+
+    // Free all variables in the current scope
+    struct var *current_var = current_scope->vars;
+    while (current_var) {
+        struct var *next_var = current_var->next;
+        if (current_var->type == VAR_TYPE_COLOR) {
+            free(current_var->value.sval);
+        }
+        free(current_var);
+        current_var = next_var;
+    }
+
+    // Pop the scope from the stack
+    struct scope *scope_to_free = current_scope;
+    current_scope = current_scope->parent;
+    free(scope_to_free);
 }
 
 // Find a variable by name, searching from innermost to outermost scope
 struct var* find_var(const char *name) {
-    for (int i = scope_level; i >= 0; --i) {
-        for (int j = 0; j < scope_stack[i].var_count; ++j) {
-            if (strcmp(scope_stack[i].vars[j].name, name) == 0) {
-                return &scope_stack[i].vars[j];
+    // Traverse up the scope stack via parent pointers
+    for (struct scope *s = current_scope; s != NULL; s = s->parent) {
+        // Traverse the linked list of variables in the current scope
+        for (struct var *v = s->vars; v != NULL; v = v->next) {
+            if (strcmp(v->name, name) == 0) {
+                return v;
             }
         }
     }
-    return NULL;
+    return NULL; // Not found in any scope
 }
 
 // Declare a numeric variable in the current scope
 void declare_num_var(const char *name, double value) {
-    if (scope_level < 0) enter_scope();
-    struct scope *current_scope = &scope_stack[scope_level];
-    if (current_scope->var_count >= MAX_VARS_PER_SCOPE) { fprintf(stderr, "Runtime Error: Maximum variables per scope reached.\n"); return; }
-    for (int i = 0; i < current_scope->var_count; ++i) {
-        if (strcmp(current_scope->vars[i].name, name) == 0) { fprintf(stderr, "Runtime Error: Variable '%s' already declared in this scope.\n", name); return; }
+    if (!current_scope) enter_scope(); // Create global scope if it doesn't exist
+
+    // Check if variable is already declared in the CURRENT scope
+    for (struct var *v = current_scope->vars; v != NULL; v = v->next) {
+        if (strcmp(v->name, name) == 0) {
+            fprintf(stderr, "Runtime Error: Variable '%s' already declared in this scope.\n", name);
+            return;
+        }
     }
-    struct var *new_var = &current_scope->vars[current_scope->var_count++];
+
+    struct var *new_var = (struct var*)malloc(sizeof(struct var));
+    if (!new_var) { exit(1); }
+
     strncpy(new_var->name, name, 31); new_var->name[31] = '\0';
     new_var->type = VAR_TYPE_NUM;
     new_var->value.dval = value;
+    
+    // Add to the front of the variable list for this scope
+    new_var->next = current_scope->vars;
+    current_scope->vars = new_var;
 }
 
 // Declare a color variable in the current scope
 void declare_color_var(const char *name, const char *value) {
-    if (scope_level < 0) enter_scope();
-    struct scope *current_scope = &scope_stack[scope_level];
-    if (current_scope->var_count >= MAX_VARS_PER_SCOPE) { fprintf(stderr, "Runtime Error: Maximum variables per scope reached.\n"); return; }
-    for (int i = 0; i < current_scope->var_count; ++i) {
-        if (strcmp(current_scope->vars[i].name, name) == 0) { fprintf(stderr, "Runtime Error: Variable '%s' already declared in this scope.\n", name); return; }
+    if (!current_scope) enter_scope(); // Create global scope if it doesn't exist
+
+    // Check if variable is already declared in the CURRENT scope
+    for (struct var *v = current_scope->vars; v != NULL; v = v->next) {
+        if (strcmp(v->name, name) == 0) {
+            fprintf(stderr, "Runtime Error: Variable '%s' already declared in this scope.\n", name);
+            return;
+        }
     }
-    struct var *new_var = &current_scope->vars[current_scope->var_count++];
+
+    struct var *new_var = (struct var*)malloc(sizeof(struct var));
+    if (!new_var) { exit(1); }
+
     strncpy(new_var->name, name, 31); new_var->name[31] = '\0';
     new_var->type = VAR_TYPE_COLOR;
     new_var->value.sval = strdup(value);
+
+    // Add to the front of the variable list for this scope
+    new_var->next = current_scope->vars;
+    current_scope->vars = new_var;
 }
 
 // Update a variable's value by evaluating an expression
@@ -405,7 +439,8 @@ const char* eval_expr_string(ExprNode *expr) {
                     return "black";
                 }
             } else {
-                return expr->data.sval;
+                fprintf(stderr, "Runtime Error: Undefined variable '%s' used as a color.\n", expr->data.sval);
+                return "black";
             }
         }
 
@@ -526,4 +561,3 @@ void free_ast(ASTNode *n) {
     } 
     free(n); 
  }
-
